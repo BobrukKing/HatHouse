@@ -1,0 +1,61 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+{% block title %}{{ catalog_title }} | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content">
+  <section class="catalog-hero container">
+    <div>
+      <p class="eyebrow">{{ store_settings.season_text|default:"Осінь / Зима 2026" }}</p>
+      <h1>{{ catalog_title }}</h1>
+    </div>
+  </section>
+  <section class="catalog-toolbar container" aria-label="Параметри каталогу">
+    <form method="get" class="toolbar-left">
+      {% if selected_category != 'all' %}<input type="hidden" name="category" value="{{ selected_category }}" />{% endif %}
+      {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}" />{% endif %}
+      <label for="items-per-page">Товарів на сторінці:</label>
+      <select id="items-per-page" name="per_page" onchange="this.form.submit()">
+        <option value="12"{% if per_page == 12 %} selected{% endif %}>12</option>
+        <option value="24"{% if per_page == 24 %} selected{% endif %}>24</option>
+        <option value="36"{% if per_page == 36 %} selected{% endif %}>36</option>
+      </select>
+    </form>
+    <form method="get" class="toolbar-search" role="search">
+      {% if selected_category != 'all' %}<input type="hidden" name="category" value="{{ selected_category }}" />{% endif %}
+      <input type="hidden" name="per_page" value="{{ per_page }}" />
+      <input type="search" id="product-search" name="q" value="{{ search_query }}" placeholder="Пошук за назвою" aria-label="Пошук за назвою товару" />
+      <button type="submit">Знайти</button>
+    </form>
+    <nav class="pagination" aria-label="Навігація сторінок">
+      {% if page_obj.has_previous %}<a class="page-number" href="?category={{ selected_category }}&per_page={{ per_page }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}&page={{ page_obj.previous_page_number }}" aria-label="Попередня сторінка">‹</a>{% endif %}
+      {% for number in page_obj.paginator.page_range %}
+        <a class="page-number{% if number == page_obj.number %} active{% endif %}" href="?category={{ selected_category }}&per_page={{ per_page }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}&page={{ number }}" aria-label="Перейти на сторінку {{ number }}">{{ number }}</a>
+      {% endfor %}
+      {% if page_obj.has_next %}<a class="page-number" href="?category={{ selected_category }}&per_page={{ per_page }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}&page={{ page_obj.next_page_number }}" aria-label="Наступна сторінка">›</a>{% endif %}
+    </nav>
+  </section>
+  <section class="container">
+    <div class="product-grid">
+      {% for product in products %}
+        <article class="product-card">
+          <a href="{% url 'product_detail' product.id %}" aria-label="Перейти до товару {{ product.name }}">
+            <img class="product-image" src="{{ product.cover_url }}" alt="{{ product.name }}" />
+          </a>
+          <div class="product-body">
+            <span class="product-category">{{ product.category.name }}</span>
+            <a href="{% url 'product_detail' product.id %}" class="product-name">{{ product.name }}</a>
+            <div class="price-row">
+              {% if product.old_price and product.old_price > product.price %}<span class="old-price">{{ product.old_price }} грн</span>{% endif %}
+              <span class="new-price">{{ product.price }} грн</span>
+              {% if product.discount_percent %}<span class="discount-badge" aria-label="Знижка {{ product.discount_percent }} відсотків">-{{ product.discount_percent }}%</span>{% endif %}
+            </div>
+            <button class="add-to-cart" type="button" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" data-product-price="{{ product.price }}" data-product-old-price="{{ product.old_price|default_if_none:'' }}" data-product-image="{{ product.cover_url }}"{% if not product.available %} disabled{% endif %}>Додати у кошик</button>
+          </div>
+        </article>
+      {% empty %}
+        <p class="info-card">У цій категорії поки немає товарів.</p>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}

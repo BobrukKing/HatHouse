@@ -1,0 +1,56 @@
+{% extends 'shop/base.html' %}
+{% block title %}Реєстрація | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container auth-modal-shell">
+  <div class="auth-modal-panel" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <a class="auth-close-button" href="{% url 'catalog' %}" aria-label="Закрити вікно">×</a>
+
+    <div class="auth-modal-header">
+      <h1 id="auth-modal-title">Зареєструватися або увійти</h1>
+      <p>Почніть з Google або заповніть форму нижче.</p>
+    </div>
+
+    <div class="auth-mode-switch" aria-label="Перемикач режиму">
+      <a class="auth-mode-btn" href="{% url 'login' %}">Увійти</a>
+      <button class="auth-mode-btn active" type="button">Реєстрація</button>
+    </div>
+
+    <div class="auth-google-row">
+      <a class="google-circle-button" href="{% url 'google_login' %}" aria-label="Увійти через Google">G</a>
+    </div>
+
+    <div class="auth-divider"><span>або</span></div>
+
+    <form method="post" class="auth-modal-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+
+      <div class="auth-field">
+        <label for="id_username">Ім’я користувача:</label>
+        {{ form.username }}
+        {% for error in form.username.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+        {% for error in form.email.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_password1">Пароль:</label>
+        {{ form.password1 }}
+        {% for error in form.password1.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_password2">Повторіть пароль:</label>
+        {{ form.password2 }}
+        {% for error in form.password2.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <button class="auth-primary-button" type="submit">Зареєструватися</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

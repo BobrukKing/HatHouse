@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}{{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}</title>
+    <meta name="description" content="Каталог головних уборів зі знижками та новими колекціями." />
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="{% url 'catalog' %}" class="brand" aria-label="Головна сторінка">
+          <span class="brand-mark{% if store_settings.brand_image %} has-image{% endif %}"{% if store_settings.brand_image %} style="background-image:url('{{ store_settings.brand_image.url }}')"{% endif %}>{% if not store_settings.brand_image %}{{ store_settings.brand_name|default:"HatHouse"|first|upper }}{% endif %}</span>
+          <span class="brand-text">{{ store_settings.brand_name|default:"HatHouse" }}</span>
+        </a>
+        <button class="mobile-menu-toggle" type="button" data-menu-toggle aria-label="Відкрити меню" aria-controls="main-navigation" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="main-nav" id="main-navigation" data-main-navigation aria-label="Головна навігація">
+          <a href="{% url 'catalog' %}" class="category-link category-link-all{% if selected_category == 'all' %} active{% endif %}">Всі товари</a>
+          <div class="category-nav-links">
+            {% for category in categories %}
+              {% if forloop.first %}<div class="category-nav-row">{% endif %}
+              {% if forloop.counter == 9 %}</div><div class="category-nav-row">{% endif %}
+              <a href="{% url 'catalog' %}?category={{ category.slug }}" class="category-link{% if selected_category == category.slug %} active{% endif %}">{{ category.name }}</a>
+              {% if forloop.last %}</div>{% endif %}
+            {% endfor %}
+          </div>
+          {% if user.is_authenticated %}
+            <div class="nav-account">
+              {% if user.is_staff %}<a class="category-link" href="{% url 'admin:index' %}">Керування</a>{% endif %}
+              <span class="category-link">{{ user.username }}</span>
+              <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Вийти</button></form>
+            </div>
+          {% else %}
+            <div class="nav-account">
+              <a class="category-link nav-auth-link" href="{% url 'login' %}">Увійти</a>
+              <a class="category-link nav-auth-link" href="{% url 'register' %}">Зареєструватися</a>
+            </div>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    {% if messages %}<div class="container message-list">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© 2026 {{ store_settings.brand_name|default:"HatHouse" }}</p>
+        <div class="footer-links">
+          <a href="{% url 'static_page' 'contacts' %}">Контакти</a>
+          <a href="{% url 'static_page' 'returns' %}">Обмін та повернення</a>
+          <a href="{% url 'static_page' 'terms' %}">Угода користувача</a>
+        </div>
+      </div>
+    </footer>
+    <button class="cart-fab" type="button" data-cart-open aria-label="Відкрити кошик" aria-controls="cart-drawer" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6" />
+        <circle cx="10" cy="20" r="1.3" />
+        <circle cx="18" cy="20" r="1.3" />
+      </svg>
+      <span class="cart-fab-count" data-cart-count hidden>0</span>
+    </button>
+    <div class="cart-backdrop" data-cart-backdrop></div>
+    <aside class="cart-drawer" id="cart-drawer" data-cart-drawer role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true" inert>
+      <div class="cart-drawer-header">
+        <h2 id="cart-title">Ваш кошик</h2>
+        <button class="cart-close" type="button" data-cart-close aria-label="Закрити кошик">×</button>
+      </div>
+      <div class="cart-items" data-cart-items aria-live="polite"></div>
+      <div class="cart-footer">
+        <p class="cart-savings" data-cart-savings hidden><span>Ваша економія:</span><strong><span data-cart-savings-amount></span> <span data-cart-savings-percent></span></strong></p>
+        <p class="cart-total">Загальна сума: <strong data-cart-total>0 грн</strong></p>
+        <button class="cart-checkout" type="button" data-cart-checkout>Оплатити</button>
+      </div>
+    </aside>
+    <form method="post" action="{% url 'checkout_start' %}" data-cart-checkout-form hidden>
+      {% csrf_token %}
+      <input type="hidden" name="cart_items" data-cart-checkout-items />
+    </form>
+    <div class="cart-confirm-backdrop" data-cart-confirm hidden inert>
+      <section class="cart-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cart-confirm-title" aria-describedby="cart-confirm-message">
+        <h2 id="cart-confirm-title">Видалити товар?</h2>
+        <p id="cart-confirm-message">Ви хочете видалити товар із кошику?</p>
+        <div class="cart-confirm-actions">
+          <button type="button" data-cart-remove-confirm>Так</button>
+          <button type="button" data-cart-remove-cancel>Ні</button>
+        </div>
+      </section>
+    </div>
+    <script src="{% static 'shop.js' %}?v=discount-summary-1" defer></script>
+  </body>
+</html>

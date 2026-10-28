@@ -1,0 +1,57 @@
+{% extends 'shop/base.html' %}
+{% block title %}Оформлення замовлення | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container checkout-page">
+  <header class="checkout-header">
+    <p class="eyebrow">Завершення покупки</p>
+    <h1>Оформлення замовлення</h1>
+  </header>
+
+  {% if not payment_enabled %}
+    <p class="checkout-payment-notice" role="status">Оплата карткою тимчасово недоступна. Магазину потрібно налаштувати платіжний шлюз.</p>
+  {% endif %}
+
+  <div class="checkout-layout">
+    <section class="checkout-summary" aria-labelledby="checkout-summary-title">
+      <h2 id="checkout-summary-title">Ваше замовлення</h2>
+      <ul class="checkout-items">
+        {% for item in items %}
+          <li class="checkout-item">
+            <div class="checkout-item-info">
+              <h3>{{ item.product.name }}</h3>
+              <p>{{ item.quantity }} шт. × {% if item.old_price %}<del>{{ item.old_price }} грн</del> <strong>{{ item.product.price }} грн</strong> <span class="discount-badge checkout-discount-badge" aria-label="Знижка {{ item.discount_percent }} відсотків">-{{ item.discount_percent }}%</span>{% else %}{{ item.product.price }} грн{% endif %}</p>
+            </div>
+            <div class="checkout-item-total">
+              {% if item.old_price %}<del>{{ item.original_subtotal }} грн</del>{% endif %}
+              <strong>{{ item.subtotal }} грн</strong>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      {% if total_savings %}
+        <p class="checkout-savings"><span>Ваша економія:</span><strong>{{ total_savings }} грн ({{ total_discount_percent }}%)</strong></p>
+      {% endif %}
+      <p class="checkout-total"><span>До сплати</span><strong>{{ total }} грн</strong></p>
+    </section>
+
+    <section class="checkout-form-section" aria-labelledby="checkout-customer-title">
+      <h2 id="checkout-customer-title">Дані покупця</h2>
+      <form method="post" class="checkout-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="checkout-errors" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          <div class="checkout-field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="checkout-error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <p class="checkout-security-note">Дані картки вводяться лише на захищеній сторінці LiqPay.</p>
+        <button class="checkout-submit" type="submit"{% if not payment_enabled %} disabled{% endif %}>Перейти до оплати карткою</button>
+      </form>
+    </section>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: hathouse
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: gunicorn hathouse.wsgi:application
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.8"
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

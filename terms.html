@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Угода користувача</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="Головна сторінка">
+          <span class="brand-mark" id="brand-mark">H</span>
+          <span class="brand-text" id="brand-text">HatHouse</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Головна навігація">
+          <a href="index.html?category=all" class="category-link" data-category="all">Всі товари</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page-content container static-page" data-editable-page="terms">
+      <div class="static-page-heading">
+        <h1>Угода користувача</h1>
+        <button class="inline-edit-button" type="button" id="edit-page-content" aria-label="Редагувати текст сторінки">✎</button>
+      </div>
+      <div class="info-card" id="editable-page-content">
+        <p>Використовуючи сайт, ви погоджуєтеся з правилами оформлення замовлення, умовами доставки та відповідальністю за достовірність контактної інформації.</p>
+        <p>Ми зберігаємо право оновлювати ціни, доступність та опис товарів без попереднього повідомлення.</p>
+        <p>Всі зображення та текстові матеріали використовуються виключно для демонстрації асортименту та не є офіційними рекламними матеріалами виробників.</p>
+      </div>
+      <form class="page-content-editor hidden" id="page-content-editor">
+        <label for="page-content-input">Текст сторінки (кожен абзац — з нового рядка)</label>
+        <textarea id="page-content-input" name="content" rows="8" required></textarea>
+        <div class="site-settings-actions">
+          <button class="submit-product" type="submit">Зберегти</button>
+          <button class="cancel-edit-button" type="button" id="cancel-page-content">Скасувати</button>
+        </div>
+      </form>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© 2026 <span id="footer-brand">HatHouse</span></p>
+        <div class="footer-links">
+          <a href="contacts.html">Контакти</a>
+          <a href="returns.html">Обмін та повернення</a>
+          <a href="terms.html">Угода користувача</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/products.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

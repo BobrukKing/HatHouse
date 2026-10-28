@@ -1,0 +1,21 @@
+{% extends 'shop/base.html' %}
+{% block title %}Статус замовлення | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container payment-result-page">
+  {% if order.status == 'paid' %}
+    <p class="eyebrow">Оплату підтверджено</p>
+    <h1>Дякуємо за замовлення!</h1>
+    <p>Замовлення {{ order.reference }} успішно оплачено.</p>
+  {% elif order.status == 'failed' %}
+    <p class="eyebrow">Оплату не завершено</p>
+    <h1>Не вдалося підтвердити оплату</h1>
+    <p>Замовлення {{ order.reference }} не оплачено. Зверніться до магазину, якщо кошти було списано.</p>
+  {% else %}
+    <p class="eyebrow">Очікуємо підтвердження</p>
+    <h1>Платіж обробляється</h1>
+    <p>Статус замовлення {{ order.reference }} оновиться після підтвердження LiqPay.</p>
+  {% endif %}
+  <p class="payment-result-total">Сума замовлення: <strong>{{ order.total }} грн</strong></p>
+  <a class="checkout-submit payment-return-link" href="{% url 'catalog' %}">Повернутися до каталогу</a>
+</main>
+{% endblock %}

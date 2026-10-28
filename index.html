@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Магазин головних уборів</title>
+    <meta name="description" content="Каталог головних уборів зі знижками та новими колекціями." />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand-wrap">
+          <a href="index.html" class="brand" aria-label="Головна сторінка">
+            <span class="brand-mark" id="brand-mark">H</span>
+            <span class="brand-text" id="brand-text">HatHouse</span>
+          </a>
+          <button class="inline-edit-button" type="button" id="brand-edit-button" aria-label="Редагувати HatHouse" title="Редагувати HatHouse">✎</button>
+        </div>
+
+        <nav class="main-nav" aria-label="Головна навігація">
+          <a href="index.html?category=all" class="category-link category-link-all active" data-category="all">Всі товари</a>
+          <a href="index.html?category=Winter%20Sale" class="category-link" data-category="Winter Sale">Winter Sale</a>
+          <a href="index.html?category=%D0%91%D0%B5%D1%80%D0%B5%D1%82%D0%B8" class="category-link" data-category="Берети">Берети</a>
+          <a href="index.html?category=%D0%9A%D0%B0%D0%BF%D0%BE%D1%80%D0%B8%20%D1%82%D0%B0%20%D0%B1%D0%B0%D0%BB%D0%B0%D0%BA%D0%BB%D0%B0%D0%B2%D0%B8" class="category-link" data-category="Капори та балаклави">Капори та балаклави</a>
+          <a href="index.html?category=%D0%9A%D0%B0%D1%80%D1%82%D1%83%D0%B7%D0%B8" class="category-link" data-category="Картузи">Картузи</a>
+          <a href="index.html?category=%D0%9B%D1%96%D1%82%D0%BD%D1%8F%20%D0%BA%D0%BE%D0%BB%D0%B5%D0%BA%D1%86%D1%96%D1%8F" class="category-link" data-category="Літня колекція">Літня колекція</a>
+          <button class="category-manager-toggle" type="button" id="category-manager-toggle" aria-label="Редагувати категорії" title="Редагувати категорії">✎</button>
+        </nav>
+        <section class="category-manager hidden" id="category-manager" aria-label="Керування категоріями">
+          <div class="category-manager-heading">
+            <h2>Категорії</h2>
+            <button type="button" id="close-category-manager" aria-label="Закрити керування категоріями">×</button>
+          </div>
+          <p class="category-manager-note">«Всі товари» є системною категорією і не редагується.</p>
+          <div id="category-manager-list"></div>
+          <form class="category-add-form" id="category-add-form">
+            <input type="text" name="categoryName" placeholder="Назва нової категорії" maxlength="15" required />
+            <button type="submit">Додати</button>
+          </form>
+        </section>
+        <section class="category-delete-modal hidden" id="category-delete-modal" role="dialog" aria-modal="true" aria-labelledby="category-delete-title">
+          <div class="category-delete-dialog">
+            <h2 id="category-delete-title">Видалити категорію?</h2>
+            <p id="category-delete-message"></p>
+            <div class="category-delete-actions">
+              <button type="button" id="cancel-category-delete">Скасувати</button>
+              <button type="button" id="confirm-category-delete">Видалити</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <section class="catalog-hero container">
+        <div>
+          <div class="editable-heading-row">
+            <p class="eyebrow" id="season-text">Осінь / Зима 2026</p>
+            <button class="inline-edit-button" type="button" id="season-edit-button" aria-label="Редагувати текст сезону" title="Редагувати текст сезону">✎</button>
+          </div>
+          <h1 id="catalog-title">Каталог головних уборів</h1>
+        </div>
+      </section>
+
+      <section class="site-settings-modal hidden" id="site-settings-modal" role="dialog" aria-modal="true" aria-labelledby="site-settings-title">
+        <form class="site-settings-dialog" id="site-settings-form">
+          <div class="site-settings-heading">
+            <h2 id="site-settings-title">Налаштування оформлення</h2>
+            <button type="button" id="close-site-settings" aria-label="Закрити налаштування">×</button>
+          </div>
+          <label>
+            Текст сезону
+            <input type="text" name="seasonText" maxlength="80" required />
+          </label>
+          <label>
+            Назва магазину
+            <input type="text" name="brandName" maxlength="40" required />
+          </label>
+          <label>
+            Аватарка магазину
+            <input type="file" name="brandImage" accept="image/*" />
+          </label>
+          <div class="site-settings-actions">
+            <button class="submit-product" type="submit">Зберегти</button>
+            <button class="cancel-edit-button" type="button" id="cancel-site-settings">Скасувати</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="catalog-toolbar container" aria-label="Параметри каталогу">
+        <div class="toolbar-left">
+          <label for="items-per-page">Товарів на сторінці:</label>
+          <select id="items-per-page" name="items-per-page">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+
+        <div class="pagination" id="pagination-numbers" aria-label="Навігація сторінок"></div>
+      </section>
+
+      <section class="container add-product-section hidden" id="add-product-section">
+        <h2>Додати новий товар</h2>
+        <form id="product-form" class="product-form">
+          <div class="form-grid">
+            <label>
+              Назва товару
+              <input type="text" name="name" placeholder="Наприклад: Woodland Black" required />
+            </label>
+
+            <label>
+              Категорія
+              <select name="category" required>
+                <option value="Winter Sale">Winter Sale</option>
+                <option value="Берети">Берети</option>
+                <option value="Капори та балаклави">Капори та балаклави</option>
+                <option value="Картузи">Картузи</option>
+                <option value="Літня колекція">Літня колекція</option>
+              </select>
+            </label>
+
+            <label>
+              Ціна продажу, грн
+              <input type="number" name="price" min="1" step="1" placeholder="Звичайна або акційна ціна" required />
+            </label>
+
+            <label>
+              Стара ціна, грн (якщо є знижка)
+              <input type="number" name="oldPrice" min="1" step="1" placeholder="Необов’язково" />
+            </label>
+
+            <label class="full-width">
+              Опис товару
+              <textarea name="description" rows="4" placeholder="Опишіть матеріал, особливості та розмір" required></textarea>
+            </label>
+
+            <label class="full-width">
+              Фото товару (від 4 до 10)
+              <input type="file" name="images" accept="image/*" multiple required />
+            </label>
+          </div>
+
+          <button type="submit" class="submit-product">Додати товар</button>
+        </form>
+      </section>
+
+      <section class="container">
+        <div id="product-grid" class="product-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <button type="button" class="floating-add-button" id="floating-add-button" aria-label="Додати товар">+</button>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© 2026 <span id="footer-brand">HatHouse</span></p>
+        <div class="footer-links">
+          <a href="contacts.html">Контакти</a>
+          <a href="returns.html">Обмін та повернення</a>
+          <a href="terms.html">Угода користувача</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/products.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'shop/base.html' %}
+{% block title %}Вхід | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container auth-modal-shell">
+  <div class="auth-modal-panel" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <a class="auth-close-button" href="{% url 'catalog' %}" aria-label="Закрити вікно">×</a>
+
+    <div class="auth-modal-header">
+      <h1 id="auth-modal-title">Зареєструватися або увійти</h1>
+      <p>Почніть з Google або введіть дані нижче.</p>
+    </div>
+
+    <div class="auth-mode-switch" aria-label="Перемикач режиму">
+      <button class="auth-mode-btn active" type="button">Увійти</button>
+      <a class="auth-mode-btn" href="{% url 'register' %}">Реєстрація</a>
+    </div>
+
+    <div class="auth-google-row">
+      <a class="google-circle-button" href="{% url 'google_login' %}" aria-label="Увійти через Google">G</a>
+    </div>
+
+    <div class="auth-divider"><span>або</span></div>
+
+    <form method="post" class="auth-modal-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
+
+      <div class="auth-field">
+        <label for="id_username">Email:</label>
+        {{ form.username }}
+        {% for error in form.username.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_password">Пароль:</label>
+        {{ form.password }}
+        {% for error in form.password.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <button class="auth-primary-button" type="submit">Увійти</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

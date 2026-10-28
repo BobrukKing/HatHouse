@@ -1,0 +1,14 @@
+{% extends 'shop/base.html' %}
+{% block title %}Перехід до оплати | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container payment-redirect-page">
+  <h1>Переходимо до оплати</h1>
+  <p>Зараз відкриється захищена сторінка LiqPay для оплати карткою.</p>
+  <form id="liqpay-form" method="post" action="https://www.liqpay.ua/api/3/checkout">
+    <input type="hidden" name="data" value="{{ payment_data }}" />
+    <input type="hidden" name="signature" value="{{ payment_signature }}" />
+    <button class="checkout-submit" type="submit">Перейти до LiqPay</button>
+  </form>
+</main>
+<script>document.getElementById('liqpay-form').requestSubmit();</script>
+{% endblock %}

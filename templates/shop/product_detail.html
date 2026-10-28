@@ -1,0 +1,38 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ product.name }} | {{ store_settings.brand_name|default:"HatHouse" }}{% endblock %}
+{% block content %}
+<main class="page-content container product-page">
+  <div class="product-detail" data-product-detail>
+    <div class="gallery-panel">
+      <button class="photo-button" type="button" data-open-image aria-label="Відкрити фото {{ product.name }}">
+        <img class="main-photo" src="{{ product.cover_url }}" alt="{{ product.name }}" data-main-image />
+      </button>
+      <div class="thumbs">
+        {% for image_url in product.gallery_urls %}
+          <button class="thumb-button{% if forloop.first %} active{% endif %}" type="button" data-image="{{ image_url }}" aria-label="Фото {{ forloop.counter }}">
+            <img class="thumb{% if forloop.first %} active{% endif %}" src="{{ image_url }}" alt="{{ product.name }} фото {{ forloop.counter }}" />
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="image-modal hidden" data-image-modal role="dialog" aria-modal="true" aria-label="Перегляд фото">
+      <button class="image-modal-close" type="button" data-close-image aria-label="Закрити фото">×</button>
+      <img class="image-modal-photo" src="{{ product.cover_url }}" alt="{{ product.name }}" data-modal-image />
+    </div>
+    <div class="product-info">
+      <div class="product-meta-line"><span class="product-category">{{ product.category.name }}</span></div>
+      <h1>{{ product.name }}</h1>
+      <span class="stock{% if not product.available %} out-of-stock{% endif %}">{% if product.available %}В наявності{% else %}Немає в наявності{% endif %}</span>
+      <div class="detail-price">
+        {% if product.old_price and product.old_price > product.price %}<span class="old-price">{{ product.old_price }} грн</span>{% endif %}
+        <span class="new-price">{{ product.price }} грн</span>
+        {% if product.discount_percent %}<span class="discount-badge" aria-label="Знижка {{ product.discount_percent }} відсотків">-{{ product.discount_percent }}%</span>{% endif %}
+      </div>
+      <div class="product-actions">
+        <button class="add-to-cart" type="button" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" data-product-price="{{ product.price }}" data-product-old-price="{{ product.old_price|default_if_none:'' }}" data-product-image="{{ product.cover_url }}"{% if not product.available %} disabled{% endif %}>Додати у кошик</button>
+      </div>
+      <div class="product-description"><h2>Опис</h2>{{ product.description|linebreaks }}</div>
+    </div>
+  </div>
+</main>
+{% endblock %}
