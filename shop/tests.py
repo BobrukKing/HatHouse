@@ -48,6 +48,43 @@ class StorePagesTests(TestCase):
         response = self.client.get(reverse("catalog"), {"per_page": 5})
         self.assertEqual(response.context["per_page"], 12)
 
+    def test_catalog_sorts_unavailable_products_after_available_products(self):
+        category = Category.objects.first()
+        available_product = Product.objects.create(
+            category=category,
+            name="Available hat",
+            description="",
+            price=100,
+            sort_order=2,
+        )
+        unavailable_product = Product.objects.create(
+            category=category,
+            name="Unavailable hat",
+            description="",
+            price=100,
+            available=False,
+            sort_order=1,
+        )
+
+        response = self.client.get(reverse("catalog"))
+
+        products = list(response.context["products"])
+        self.assertLess(products.index(available_product), products.index(unavailable_product))
+        self.assertContains(response, "disabled>Немає в наявності</button>")
+
+    def test_unavailable_product_button_label_on_detail_page(self):
+        product = Product.objects.first()
+        product.available = False
+        product.save(update_fields=["available"])
+
+        response = self.client.get(reverse("product_detail", args=[product.pk]))
+
+        self.assertContains(
+            response,
+            '<button class="add-to-cart" type="button"',
+        )
+        self.assertContains(response, "disabled>Немає в наявності</button>")
+
     def test_category_limit_and_navigation_rows(self):
         Category.objects.all().update(is_bonus=True)
         for category_number in range(Category.objects.count(), MAX_CATEGORIES):

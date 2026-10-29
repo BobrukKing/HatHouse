@@ -49,7 +49,7 @@
               <span class="new-price">{{ product.price }} грн</span>
               {% if product.discount_percent %}<span class="discount-badge" aria-label="Знижка {{ product.discount_percent }} відсотків">-{{ product.discount_percent }}%</span>{% endif %}
             </div>
-            <button class="add-to-cart" type="button" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" data-product-price="{{ product.price }}" data-product-old-price="{{ product.old_price|default_if_none:'' }}" data-product-image="{{ product.cover_url }}"{% if not product.available %} disabled{% endif %}>Додати у кошик</button>
+            <button class="add-to-cart" type="button" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" data-product-price="{{ product.price }}" data-product-old-price="{{ product.old_price|default_if_none:'' }}" data-product-image="{{ product.cover_url }}"{% if not product.available %} disabled{% endif %}>{% if product.available %}Додати у кошик{% else %}Немає в наявності{% endif %}</button>
           </div>
         </article>
       {% empty %}

@@ -146,6 +146,7 @@ def catalog(request):
             products = Product.objects.select_related("category").prefetch_related("photos")
     if search_query:
         products = products.filter(name__icontains=search_query)
+    products = products.order_by("-available", "sort_order", "-id")
 
     try:
         per_page = int(request.GET.get("per_page", "12"))
