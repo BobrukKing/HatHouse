@@ -25,11 +25,11 @@ python manage.py runserver
 3. У Render вибери **New Blueprint**, підключи репозиторій і застосуй кореневий `render.yaml`. На запит `DATABASE_URL` встав Internal Database URL. `DJANGO_SECRET_KEY` буде згенеровано автоматично.
 4. Після першого deploy створюй адміністратора в Shell сервісу: `python manage.py createsuperuser`.
 5. Для власного домену задай `DJANGO_ALLOWED_HOSTS` (лише hostname, без `https://`) і `DJANGO_CSRF_TRUSTED_ORIGINS` (повний origin, наприклад `https://shop.example.com`). Render hostname додається автоматично.
-6. Для платежів додай у Environment Variables `LIQPAY_PUBLIC_KEY`, `LIQPAY_PRIVATE_KEY` і `LIQPAY_SANDBOX`; секретний ключ не додавай до GitHub.
+6. У Render Environment задай Cloudinary `CLOUD_NAME`, `API_KEY` і `API_SECRET`, щоб завантажені фото зберігалися після redeploy. Також додай `LIQPAY_PUBLIC_KEY`, `LIQPAY_PRIVATE_KEY` і `LIQPAY_SANDBOX` для платежів. Не додавай секретні значення до GitHub.
 
 Blueprint запускає `bash build.sh`, який встановлює залежності, збирає статику й застосовує міграції. Сайт стартує через Gunicorn.
 
-**Завантажені фото:** Render filesystem за замовчуванням непостійний, а `/media/` у цьому проєкті зараз обслуговується лише в DEBUG. Перед використанням завантажених через адмінку фото в production налаштуй S3-сумісне сховище (наприклад, Cloudinary або S3) або окрему production media-конфігурацію. Не покладайся на локальні файли вебсервісу після redeploy.
+**Завантажені фото:** production використовує Cloudinary (`CLOUD_NAME`, `API_KEY`, `API_SECRET`), а локальна розробка без цих змінних зберігає файли у `media/`. Якщо вказано лише частину Cloudinary-ключів або їх немає в production, застосунок не запуститься з помилкою конфігурації.
 
 ## Оплата замовлень
 

@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",
     "django.contrib.staticfiles",
+    "cloudinary",
     "adminsortable2",
     "shop.apps.ShopConfig",
 ]
@@ -114,8 +116,38 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "css", BASE_DIR / "images", BASE_DIR / "static" / "js"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+cloudinary_env = {
+    "CLOUD_NAME": os.environ.get("CLOUD_NAME"),
+    "API_KEY": os.environ.get("API_KEY"),
+    "API_SECRET": os.environ.get("API_SECRET"),
+}
+configured_cloudinary_values = {
+    name: value for name, value in cloudinary_env.items() if value
+}
+if configured_cloudinary_values and len(configured_cloudinary_values) != len(cloudinary_env):
+    missing_cloudinary_values = [
+        name for name, value in cloudinary_env.items() if not value
+    ]
+    raise ImproperlyConfigured(
+        "Set all Cloudinary environment variables: "
+        + ", ".join(missing_cloudinary_values)
+    )
+if not configured_cloudinary_values and not DEBUG:
+    raise ImproperlyConfigured(
+        "Set CLOUD_NAME, API_KEY, and API_SECRET for production media storage."
+    )
+
+if configured_cloudinary_values:
+    CLOUDINARY_STORAGE = cloudinary_env
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": {
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if configured_cloudinary_values
+            else "django.core.files.storage.FileSystemStorage"
+        )
+    },
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 MEDIA_URL = "/media/"

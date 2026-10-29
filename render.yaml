@@ -14,3 +14,9 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
+      - key: CLOUD_NAME
+        sync: false
+      - key: API_KEY
+        sync: false
+      - key: API_SECRET
+        sync: false
