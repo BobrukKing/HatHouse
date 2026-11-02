@@ -310,24 +310,182 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainImage = detail.querySelector('[data-main-image]');
   const modal = detail.querySelector('[data-image-modal]');
   const modalImage = detail.querySelector('[data-modal-image]');
-  const closeModal = () => modal.classList.add('hidden');
+  const thumbnails = [...detail.querySelectorAll('[data-image]')];
+  const gallery = thumbnails.map((button) => button.dataset.image);
+  if (!gallery.length) gallery.push(mainImage.src);
 
-  detail.querySelectorAll('[data-image]').forEach((button) => {
+  const zoomLevel = modal.querySelector('[data-image-zoom-level]');
+  const imageCounter = modal.querySelector('[data-image-counter]');
+  const pointers = new Map();
+  let currentIndex = 0;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let previousDistance = 0;
+  let pointerStart = null;
+  let previousFocus = null;
+
+  const renderImage = () => {
+    const imageUrl = gallery[currentIndex];
+    mainImage.src = imageUrl;
+    modalImage.src = imageUrl;
+    thumbnails.forEach((button, index) => {
+      const active = index === currentIndex;
+      button.classList.toggle('active', active);
+      button.querySelector('.thumb')?.classList.toggle('active', active);
+      button.setAttribute('aria-current', String(active));
+    });
+    imageCounter.textContent = `${currentIndex + 1} / ${gallery.length}`;
+  };
+
+  const renderZoom = () => {
+    modalImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    zoomLevel.textContent = `${Math.round(scale * 100)}%`;
+    modalImage.classList.toggle('is-zoomed', scale > 1);
+  };
+
+  const resetZoom = () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    renderZoom();
+  };
+
+  const setScale = (nextScale) => {
+    scale = Math.min(4, Math.max(1, nextScale));
+    if (scale === 1) {
+      translateX = 0;
+      translateY = 0;
+    }
+    renderZoom();
+  };
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.inert = true;
+    document.body.classList.remove('image-modal-open');
+    resetZoom();
+    pointers.clear();
+    if (previousFocus?.isConnected) previousFocus.focus();
+  };
+
+  const openModal = () => {
+    previousFocus = document.activeElement;
+    const activeThumbnail = thumbnails.findIndex((button) => button.dataset.image === mainImage.src);
+    currentIndex = activeThumbnail >= 0 ? activeThumbnail : 0;
+    renderImage();
+    resetZoom();
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    modal.inert = false;
+    document.body.classList.add('image-modal-open');
+    modal.querySelector('[data-close-image]').focus();
+  };
+
+  const moveImage = (direction) => {
+    currentIndex = (currentIndex + direction + gallery.length) % gallery.length;
+    renderImage();
+    resetZoom();
+  };
+
+  thumbnails.forEach((button, index) => {
     button.addEventListener('click', () => {
-      mainImage.src = button.dataset.image;
-      modalImage.src = button.dataset.image;
-      detail.querySelectorAll('.thumb').forEach((thumb) => thumb.classList.toggle('active', thumb.closest('[data-image]') === button));
+      currentIndex = index;
+      renderImage();
+      resetZoom();
     });
   });
-  detail.querySelector('[data-open-image]').addEventListener('click', () => {
-    modalImage.src = mainImage.src;
-    modal.classList.remove('hidden');
-  });
+  detail.querySelector('[data-open-image]').addEventListener('click', openModal);
   detail.querySelector('[data-close-image]').addEventListener('click', closeModal);
+  modal.querySelector('[data-image-prev]').addEventListener('click', () => moveImage(-1));
+  modal.querySelector('[data-image-next]').addEventListener('click', () => moveImage(1));
+  modal.querySelector('[data-image-zoom-in]').addEventListener('click', () => setScale(scale + 0.25));
+  modal.querySelector('[data-image-zoom-out]').addEventListener('click', () => setScale(scale - 0.25));
+  modal.querySelector('[data-image-zoom-reset]').addEventListener('click', resetZoom);
+  modal.addEventListener('wheel', (event) => {
+    if (modal.classList.contains('hidden')) return;
+    event.preventDefault();
+    setScale(scale + (event.deltaY < 0 ? 0.2 : -0.2));
+  }, { passive: false });
+
+  modalImage.addEventListener('pointerdown', (event) => {
+    modalImage.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size === 1) {
+      pointerStart = { x: event.clientX, y: event.clientY, translateX, translateY };
+    } else if (pointers.size === 2) {
+      const [first, second] = [...pointers.values()];
+      previousDistance = Math.hypot(first.x - second.x, first.y - second.y);
+    }
+  });
+
+  modalImage.addEventListener('pointermove', (event) => {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size >= 2) {
+      const [first, second] = [...pointers.values()];
+      const distance = Math.hypot(first.x - second.x, first.y - second.y);
+      if (previousDistance) setScale(scale * (distance / previousDistance));
+      previousDistance = distance;
+    } else if (scale > 1 && pointerStart) {
+      translateX = pointerStart.translateX + event.clientX - pointerStart.x;
+      translateY = pointerStart.translateY + event.clientY - pointerStart.y;
+      renderZoom();
+    }
+  });
+
+  const finishPointer = (event) => {
+    const pointer = pointers.get(event.pointerId);
+    if (!pointer) return;
+    pointers.delete(event.pointerId);
+    if (pointers.size === 0 && pointerStart) {
+      const deltaX = pointer.x - pointerStart.x;
+      const deltaY = pointer.y - pointerStart.y;
+      if (scale === 1 && Math.abs(deltaX) > 55 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        moveImage(deltaX < 0 ? 1 : -1);
+      } else if (scale > 1 && Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) {
+        pointerStart = null;
+      }
+      pointerStart = null;
+    } else if (pointers.size === 1) {
+      const [remaining] = pointers.values();
+      pointerStart = { ...remaining, translateX, translateY };
+    }
+    previousDistance = 0;
+  };
+  modalImage.addEventListener('pointerup', finishPointer);
+  modalImage.addEventListener('pointercancel', finishPointer);
   modal.addEventListener('click', (event) => {
     if (event.target === modal) closeModal();
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeModal();
+    if (modal.classList.contains('hidden')) return;
+    if (event.key === 'Escape') {
+      closeModal();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveImage(1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      moveImage(-1);
+    } else if (event.key === '+' || event.key === '=') {
+      setScale(scale + 0.25);
+    } else if (event.key === '-') {
+      setScale(scale - 0.25);
+    } else if (event.key === '0') {
+      resetZoom();
+    } else if (event.key === 'Tab') {
+      const focusable = [...modal.querySelectorAll('button:not(:disabled)')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
   });
 });

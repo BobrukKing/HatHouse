@@ -906,11 +906,14 @@ select {
 .image-modal {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 32px;
-  background: rgba(27, 22, 19, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 76px 88px;
+  background: rgba(18, 19, 22, 0.94);
   z-index: 100;
+  touch-action: none;
 }
 
 .image-modal.hidden {
@@ -918,11 +921,25 @@ select {
 }
 
 .image-modal-photo {
-  max-width: min(92vw, 1100px);
-  max-height: 88vh;
+  max-width: min(86vw, 1280px);
+  max-height: calc(100vh - 152px);
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4);
+  transform-origin: center;
+  transition: transform 0.12s ease-out;
+  user-select: none;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.image-modal-photo.is-zoomed {
+  cursor: grab;
+  transition: none;
+}
+
+.image-modal-photo.is-zoomed:active {
+  cursor: grabbing;
 }
 
 .image-modal-close {
@@ -938,6 +955,94 @@ select {
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
+}
+
+.image-modal-nav,
+.image-modal-controls button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.image-modal-nav:hover,
+.image-modal-nav:focus-visible,
+.image-modal-controls button:hover,
+.image-modal-controls button:focus-visible {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.image-modal-nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 2rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.image-modal-prev {
+  left: 24px;
+}
+
+.image-modal-next {
+  right: 24px;
+}
+
+.image-modal-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(25, 26, 29, 0.76);
+  color: #fff;
+  transform: translateX(-50%);
+}
+
+.image-modal-controls button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  font: inherit;
+  font-size: 1.15rem;
+}
+
+.image-modal-controls [data-image-zoom-reset] {
+  width: auto;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.image-modal-controls [data-image-zoom-level] {
+  min-width: 48px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.image-modal-counter {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+body.image-modal-open {
+  overflow: hidden;
 }
 
 .detail-price .new-price {
@@ -1907,6 +2012,42 @@ body.cart-open {
   .checkout-layout {
     grid-template-columns: 1fr;
     gap: 34px;
+  }
+
+  .image-modal {
+    padding: 72px 54px;
+  }
+
+  .image-modal-photo {
+    max-width: 100%;
+    max-height: calc(100vh - 144px);
+  }
+
+  .image-modal-prev {
+    left: 8px;
+  }
+
+  .image-modal-next {
+    right: 8px;
+  }
+
+  .image-modal-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .image-modal-close {
+    top: 12px;
+    right: 12px;
+  }
+
+  .image-modal-counter {
+    top: 22px;
+    left: 16px;
+  }
+
+  .image-modal-controls {
+    bottom: 12px;
   }
 
   .pagination,

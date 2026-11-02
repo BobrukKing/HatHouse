@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -26,12 +27,102 @@ from .models import (
     Product,
     ProductPhoto,
     StorePage,
+    StoreSettings,
 )
 
 User = get_user_model()
 
 
 class StorePagesTests(TestCase):
+    def test_product_admin_category_filters_only_show_their_category_types(self):
+        admin_user = User.objects.create_superuser(
+            username="category-filter-admin",
+            email="category-filter@example.com",
+            password="Test-pass-9512",
+        )
+        self.client.force_login(admin_user)
+        main_category = Category.objects.create(name="Main filter")
+        bonus_category = Category.objects.create(name="Bonus filter", is_bonus=True)
+
+        response = self.client.get(reverse("admin:shop_product_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        page = response.content.decode()
+        self.assertIn(f"?main_category={main_category.pk}", page)
+        self.assertNotIn(f"?main_category={bonus_category.pk}", page)
+        self.assertIn(f"?bonus_category={bonus_category.pk}", page)
+        self.assertNotIn(f"?bonus_category={main_category.pk}", page)
+
+    def test_auth_group_is_hidden_from_admin(self):
+        self.assertFalse(admin.site.is_registered(Group))
+        self.assertTrue(admin.site.is_registered(User))
+
+    def test_admin_delete_controls_and_permissions(self):
+        admin_user = User.objects.create_superuser(
+            username="delete-controls-admin",
+            email="delete-controls@example.com",
+            password="Test-pass-9512",
+        )
+        self.client.force_login(admin_user)
+
+        product = Product.objects.first()
+        category = Category.objects.first()
+        for model_name, instance in (("product", product), ("category", category)):
+            with self.subTest(model=model_name):
+                response = self.client.get(
+                    reverse(f"admin:shop_{model_name}_change", args=[instance.pk])
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'class="deletelink"')
+
+        store_page = StorePage.objects.first()
+        store_settings = StoreSettings.objects.create(brand_name="Delete protection")
+        for model_name, instance in (("storepage", store_page), ("storesettings", store_settings)):
+            with self.subTest(model=model_name):
+                change_response = self.client.get(
+                    reverse(f"admin:shop_{model_name}_change", args=[instance.pk])
+                )
+                self.assertEqual(change_response.status_code, 200)
+                self.assertNotContains(change_response, 'class="deletelink"')
+                delete_response = self.client.get(
+                    reverse(f"admin:shop_{model_name}_delete", args=[instance.pk])
+                )
+                self.assertEqual(delete_response.status_code, 403)
+                self.assertTrue(type(instance).objects.filter(pk=instance.pk).exists())
+
+    def test_product_gallery_has_lightbox_navigation_and_zoom_controls(self):
+        product = Product.objects.first()
+
+        response = self.client.get(reverse("product_detail", args=[product.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-image-modal')
+        self.assertContains(response, 'data-image-prev')
+        self.assertContains(response, 'data-image-next')
+        self.assertContains(response, 'data-image-zoom-in')
+        self.assertContains(response, 'data-image-zoom-out')
+        self.assertContains(response, 'data-image-zoom-reset')
+
+    @override_settings(STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    })
+    def test_admin_index_shows_quick_navigation_and_custom_theme(self):
+        admin_user = User.objects.create_superuser(
+            username="dashboard-admin",
+            email="dashboard@example.com",
+            password="Test-pass-9512",
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse("admin:index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Швидка навігація")
+        self.assertContains(response, "admin-nav-icon")
+        self.assertContains(response, reverse("admin:shop_order_changelist"))
+        self.assertContains(response, "admin/css/hathouse-admin.css")
+
     def test_catalog_shows_seeded_products_and_categories(self):
         response = self.client.get(reverse("catalog"))
         self.assertEqual(response.status_code, 200)

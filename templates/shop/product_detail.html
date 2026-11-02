@@ -15,9 +15,18 @@
         {% endfor %}
       </div>
     </div>
-    <div class="image-modal hidden" data-image-modal role="dialog" aria-modal="true" aria-label="Перегляд фото">
+    <div class="image-modal hidden" data-image-modal role="dialog" aria-modal="true" aria-label="Перегляд фото товару" aria-hidden="true" inert>
       <button class="image-modal-close" type="button" data-close-image aria-label="Закрити фото">×</button>
-      <img class="image-modal-photo" src="{{ product.cover_url }}" alt="{{ product.name }}" data-modal-image />
+      <button class="image-modal-nav image-modal-prev" type="button" data-image-prev aria-label="Попереднє фото">‹</button>
+      <img class="image-modal-photo" src="{{ product.cover_url }}" alt="{{ product.name }}" data-modal-image draggable="false" />
+      <button class="image-modal-nav image-modal-next" type="button" data-image-next aria-label="Наступне фото">›</button>
+      <div class="image-modal-controls" aria-label="Керування масштабом фото">
+        <button type="button" data-image-zoom-out aria-label="Зменшити фото">−</button>
+        <span data-image-zoom-level aria-live="polite">100%</span>
+        <button type="button" data-image-zoom-in aria-label="Збільшити фото">+</button>
+        <button type="button" data-image-zoom-reset>Скинути</button>
+      </div>
+      <span class="image-modal-counter" data-image-counter aria-live="polite"></span>
     </div>
     <div class="product-info">
       <div class="product-meta-line"><span class="product-category">{{ product.category.name }}</span></div>

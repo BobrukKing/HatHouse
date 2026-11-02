@@ -113,7 +113,12 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "css", BASE_DIR / "images", BASE_DIR / "static" / "js"]
+STATICFILES_DIRS = [
+    BASE_DIR / "css",
+    BASE_DIR / "images",
+    BASE_DIR / "static",
+    BASE_DIR / "static" / "js",
+]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 cloudinary_env = {
     "CLOUD_NAME": os.environ.get("CLOUD_NAME"),

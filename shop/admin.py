@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.models import Max
 from adminsortable2.admin import SortableAdminMixin
@@ -17,6 +18,8 @@ from .models import (
     StorePage,
     StoreSettings,
 )
+
+admin.site.unregister(Group)
 
 
 class ProductPhotoInline(admin.TabularInline):
@@ -89,6 +92,38 @@ class CategoryAdminForm(forms.ModelForm):
         return cleaned_data
 
 
+class MainCategoryFilter(admin.SimpleListFilter):
+    title = "Основна категорія"
+    parameter_name = "main_category"
+
+    def lookups(self, request, model_admin):
+        return [
+            (str(category.pk), category.name)
+            for category in Category.objects.filter(is_bonus=False)
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(category_id=self.value())
+        return queryset
+
+
+class BonusCategoryFilter(admin.SimpleListFilter):
+    title = "Бонусні категорії"
+    parameter_name = "bonus_category"
+
+    def lookups(self, request, model_admin):
+        return [
+            (str(category.pk), category.name)
+            for category in Category.objects.filter(is_bonus=True)
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(bonus_categories__id=self.value()).distinct()
+        return queryset
+
+
 @admin.register(Category)
 class CategoryAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = CategoryAdminForm
@@ -107,7 +142,7 @@ class CategoryAdmin(SortableAdminMixin, admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
     list_display = ("name", "category", "price", "old_price", "available", "sort_order")
-    list_filter = ("category", "bonus_categories", "available")
+    list_filter = (MainCategoryFilter, BonusCategoryFilter, "available")
     search_fields = ("name", "description")
     filter_horizontal = ("bonus_categories",)
     inlines = (ProductPhotoInline,)
@@ -132,10 +167,16 @@ class ProductAdmin(admin.ModelAdmin):
 class StorePageAdmin(admin.ModelAdmin):
     list_display = ("title", "slug")
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(StoreSettings)
 class StoreSettingsAdmin(admin.ModelAdmin):
     list_display = ("brand_name", "season_text")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class OrderItemInline(admin.TabularInline):
