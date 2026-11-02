@@ -10,6 +10,7 @@ urlpatterns = [
     path("checkout/", views.checkout, name="checkout"),
     path("payments/result/", views.payment_result, name="payment_result"),
     path("payments/liqpay/callback/", views.liqpay_callback, name="liqpay_callback"),
+    path("api/pending-order-count/", views.pending_order_count, name="pending_order_count"),
     path("products/<int:product_id>/", views.product_detail, name="product_detail"),
     path("pages/<slug:slug>/", views.static_page, name="static_page"),
     path(

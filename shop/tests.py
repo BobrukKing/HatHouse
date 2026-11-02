@@ -2,12 +2,14 @@ import base64
 import hashlib
 import json
 import re
+import smtplib
 import tempfile
 from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -89,6 +91,52 @@ class StorePagesTests(TestCase):
                 )
                 self.assertEqual(delete_response.status_code, 403)
                 self.assertTrue(type(instance).objects.filter(pk=instance.pk).exists())
+
+    def test_paid_order_count_updates_after_order_is_processed(self):
+        admin_user = User.objects.create_superuser(
+            username="order-count-admin",
+            email="order-count@example.com",
+            password="Test-pass-9512",
+        )
+        self.client.force_login(admin_user)
+        pending_order = Order.objects.create(
+            full_name="Pending shipment",
+            email="buyer@example.com",
+            phone="+380501234567",
+            delivery_address="Київ",
+            total=900,
+            status=Order.Status.PAID,
+        )
+        Order.objects.create(
+            full_name="Awaiting payment",
+            email="pending@example.com",
+            phone="+380501234568",
+            delivery_address="Львів",
+            total=500,
+        )
+
+        count_url = reverse("pending_order_count")
+        self.assertEqual(self.client.get(count_url).json(), {"count": 1})
+        catalog_response = self.client.get(reverse("catalog"))
+        self.assertContains(catalog_response, 'data-pending-shipping-count')
+        self.assertContains(catalog_response, ">1</span>")
+
+        pending_order.status = Order.Status.COMPLETED
+        pending_order.save(update_fields=["status"])
+
+        self.assertEqual(self.client.get(count_url).json(), {"count": 0})
+
+    def test_non_staff_cannot_read_pending_order_count(self):
+        User.objects.create_user(
+            username="regular-shopper",
+            email="shopper@example.com",
+            password="Test-pass-9512",
+        )
+        self.client.login(username="regular-shopper", password="Test-pass-9512")
+
+        response = self.client.get(reverse("pending_order_count"))
+
+        self.assertEqual(response.status_code, 403)
 
     def test_product_gallery_has_lightbox_navigation_and_zoom_controls(self):
         product = Product.objects.first()
@@ -519,7 +567,13 @@ class StorePagesTests(TestCase):
         ).decode()
         self.assertEqual(response.context["payment_signature"], expected_signature)
 
-    @override_settings(LIQPAY_PRIVATE_KEY="private-test-key", LIQPAY_SANDBOX=True)
+    @override_settings(
+        LIQPAY_PRIVATE_KEY="private-test-key",
+        LIQPAY_SANDBOX=True,
+        ADMIN_ORDER_EMAIL="admin@example.com",
+        DEFAULT_FROM_EMAIL="shop@example.com",
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    )
     def test_liqpay_callback_checks_signature_before_marking_order_paid(self):
         order = Order.objects.create(
             full_name="Ірина Покупець",
@@ -527,6 +581,13 @@ class StorePagesTests(TestCase):
             phone="+380501234567",
             delivery_address="Відділення 1, Київ",
             total=890,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=Product.objects.first(),
+            product_name="Панама тестова",
+            quantity=2,
+            unit_price=445,
         )
         payment_data = base64.b64encode(json.dumps({
             "order_id": str(order.reference),
@@ -553,6 +614,67 @@ class StorePagesTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(valid_response.status_code, 200)
         self.assertEqual(order.status, Order.Status.PAID)
+        self.assertTrue(order.admin_notification_sent)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["admin@example.com"])
+        self.assertIn(str(order.reference), mail.outbox[0].subject)
+        self.assertIn("Панама тестова × 2", mail.outbox[0].body)
+        self.assertIn("buyer@example.com", mail.outbox[0].body)
+        self.assertIn("+380501234567", mail.outbox[0].body)
+
+        repeated_response = self.client.post(reverse("liqpay_callback"), {
+            "data": payment_data,
+            "signature": signature,
+        })
+        self.assertEqual(repeated_response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+
+    @override_settings(
+        LIQPAY_PRIVATE_KEY="private-test-key",
+        LIQPAY_SANDBOX=True,
+        ADMIN_ORDER_EMAIL="admin@example.com",
+        DEFAULT_FROM_EMAIL="shop@example.com",
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    )
+    @patch("shop.views.send_mail", side_effect=smtplib.SMTPException("SMTP unavailable"))
+    def test_paid_callback_reports_notification_failure_and_can_retry(self, mock_send_mail):
+        order = Order.objects.create(
+            full_name="Ірина Покупець",
+            email="buyer@example.com",
+            phone="+380501234567",
+            delivery_address="Відділення 1, Київ",
+            total=890,
+        )
+        payment_data = base64.b64encode(json.dumps({
+            "order_id": str(order.reference),
+            "amount": "890.00",
+            "currency": "UAH",
+            "status": "sandbox",
+        }).encode()).decode()
+        signature = base64.b64encode(
+            hashlib.sha1(("private-test-key" + payment_data + "private-test-key").encode()).digest()
+        ).decode()
+
+        with self.assertLogs("shop.views", level="ERROR") as notification_logs:
+            failed_response = self.client.post(reverse("liqpay_callback"), {
+                "data": payment_data,
+                "signature": signature,
+            })
+        order.refresh_from_db()
+        self.assertEqual(failed_response.status_code, 503)
+        self.assertEqual(order.status, Order.Status.PAID)
+        self.assertFalse(order.admin_notification_sent)
+        self.assertIn("Could not send admin notification", notification_logs.output[0])
+
+        mock_send_mail.side_effect = None
+        mock_send_mail.return_value = 1
+        retry_response = self.client.post(reverse("liqpay_callback"), {
+            "data": payment_data,
+            "signature": signature,
+        })
+        order.refresh_from_db()
+        self.assertEqual(retry_response.status_code, 200)
+        self.assertTrue(order.admin_notification_sent)
 
     def test_registration_requires_email_and_username(self):
         form = RegistrationForm({

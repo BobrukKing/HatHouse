@@ -32,7 +32,7 @@
           </div>
           {% if user.is_authenticated %}
             <div class="nav-account">
-              {% if user.is_staff %}<a class="category-link" href="{% url 'admin:index' %}">Керування</a>{% endif %}
+              {% if user.is_staff %}<a class="category-link admin-management-link" href="{% url 'admin:index' %}">Керування{% if perms.shop.view_order %}<span class="pending-order-badge" data-pending-shipping-count data-count-url="{% url 'pending_order_count' %}" aria-label="Замовлень очікують відправки: {{ pending_shipping_count }}"{% if not pending_shipping_count %} hidden{% endif %}>{{ pending_shipping_count }}</span>{% endif %}</a>{% endif %}
               <span class="category-link">{{ user.username }}</span>
               <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Вийти</button></form>
             </div>

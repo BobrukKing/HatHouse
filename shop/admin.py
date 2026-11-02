@@ -190,6 +190,7 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("reference", "full_name", "total", "status", "created_at")
     list_filter = ("status", "created_at")
+    list_editable = ("status",)
     search_fields = ("reference", "full_name", "email", "phone")
-    readonly_fields = ("reference", "created_at")
+    readonly_fields = ("reference", "created_at", "admin_notification_sent")
     inlines = (OrderItemInline,)

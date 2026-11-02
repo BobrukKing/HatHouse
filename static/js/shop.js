@@ -1,4 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const pendingOrderBadge = document.querySelector('[data-pending-shipping-count]');
+  if (pendingOrderBadge) {
+    const refreshPendingOrders = async () => {
+      try {
+        const response = await fetch(pendingOrderBadge.dataset.countUrl, {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const { count } = await response.json();
+        if (!Number.isInteger(count) || count < 0) throw new Error('Invalid pending order count');
+        pendingOrderBadge.textContent = String(count);
+        pendingOrderBadge.hidden = count === 0;
+        pendingOrderBadge.setAttribute('aria-label', `Замовлень очікують відправки: ${count}`);
+      } catch (error) {
+        console.warn('Не вдалося оновити лічильник замовлень:', error);
+      }
+    };
+
+    window.setInterval(refreshPendingOrders, 30000);
+  }
+
   const menuToggle = document.querySelector('[data-menu-toggle]');
   const mainNavigation = document.querySelector('[data-main-navigation]');
   const mobileNavigation = window.matchMedia('(max-width: 960px)');

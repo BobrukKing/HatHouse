@@ -1,6 +1,8 @@
 import base64
 import hashlib
 import json
+import logging
+import smtplib
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
@@ -8,21 +10,79 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.crypto import constant_time_compare, get_random_string
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.cache import never_cache
 
 from .forms import CheckoutForm, RegistrationForm
 from .models import Category, Order, OrderItem, Product, StorePage
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
+
+
+class OrderNotificationError(Exception):
+    pass
+
+
+def _send_paid_order_notification(order):
+    recipient = settings.ADMIN_ORDER_EMAIL
+    if not recipient:
+        raise ImproperlyConfigured("Set ADMIN_ORDER_EMAIL to receive paid-order notifications.")
+    if (
+        settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend"
+        and not settings.EMAIL_HOST
+    ):
+        raise ImproperlyConfigured("Set EMAIL_HOST to send paid-order notifications.")
+
+    items = order.items.all()
+    item_lines = [
+        f"- {item.product_name} × {item.quantity} — {item.unit_price * item.quantity} грн"
+        for item in items
+    ]
+    message = "\n".join([
+        "Замовлення оплачено та очікує на відправлення.",
+        "",
+        f"Номер замовлення: {order.reference}",
+        "",
+        "Товари:",
+        *item_lines,
+        "",
+        f"Сума: {order.total} грн",
+        "",
+        "Контакти клієнта:",
+        f"Ім'я: {order.full_name}",
+        f"Email: {order.email}",
+        f"Телефон: {order.phone}",
+        f"Адреса доставки: {order.delivery_address}",
+    ])
+    sent_count = send_mail(
+        subject=f"Оплачено замовлення {order.reference}",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=False,
+    )
+    if sent_count != 1:
+        raise OrderNotificationError(f"Order notification email was not sent for order {order.reference}.")
+
+
+@require_GET
+@never_cache
+def pending_order_count(request):
+    if not request.user.is_authenticated or not request.user.is_staff or not request.user.has_perm("shop.view_order"):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+    count = Order.objects.filter(status=Order.Status.PAID).count()
+    return JsonResponse({"count": count})
 
 
 def _get_google_user(user_info):
@@ -352,23 +412,33 @@ def liqpay_callback(request):
         payment = json.loads(base64.b64decode(payment_data, validate=True))
         if not isinstance(payment, dict):
             return HttpResponseBadRequest("Invalid payment data")
-        order = Order.objects.get(reference=payment.get("order_id"))
         amount = Decimal(str(payment.get("amount")))
+        successful_payment = payment.get("status") == "success" or (
+            payment.get("status") == "sandbox" and settings.LIQPAY_SANDBOX
+        )
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(reference=payment.get("order_id"))
+            if payment.get("currency") != "UAH" or amount != Decimal(order.total):
+                return HttpResponseBadRequest("Payment amount mismatch")
+
+            if order.status != Order.Status.PAID:
+                if successful_payment:
+                    order.status = Order.Status.PAID
+                    order.save(update_fields=["status"])
+                elif payment.get("status") in {"failure", "error", "reversed", "expired"}:
+                    order.status = Order.Status.FAILED
+                    order.save(update_fields=["status"])
+
+            if successful_payment and order.status == Order.Status.PAID and not order.admin_notification_sent:
+                try:
+                    _send_paid_order_notification(order)
+                except (ImproperlyConfigured, OrderNotificationError, OSError, smtplib.SMTPException):
+                    logger.exception("Could not send admin notification for paid order %s.", order.reference)
+                    return HttpResponse("Order notification delivery failed", status=503)
+                order.admin_notification_sent = True
+                order.save(update_fields=["admin_notification_sent"])
     except (ValueError, TypeError, InvalidOperation, Order.DoesNotExist, ValidationError):
         return HttpResponseBadRequest("Invalid payment data")
-
-    if payment.get("currency") != "UAH" or amount != Decimal(order.total):
-        return HttpResponseBadRequest("Payment amount mismatch")
-
-    if order.status != Order.Status.PAID:
-        if payment.get("status") == "success" or (
-            payment.get("status") == "sandbox" and settings.LIQPAY_SANDBOX
-        ):
-            order.status = Order.Status.PAID
-            order.save(update_fields=["status"])
-        elif payment.get("status") in {"failure", "error", "reversed", "expired"}:
-            order.status = Order.Status.FAILED
-            order.save(update_fields=["status"])
 
     return HttpResponse("OK")
 

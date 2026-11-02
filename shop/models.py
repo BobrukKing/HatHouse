@@ -133,7 +133,8 @@ class StorePage(models.Model):
 class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Очікує оплати"
-        PAID = "paid", "Оплачено"
+        PAID = "paid", "Очікує відправки"
+        COMPLETED = "completed", "Опрацьовано"
         FAILED = "failed", "Не оплачено"
 
     reference = models.UUIDField("Номер замовлення", default=uuid.uuid4, unique=True, editable=False)
@@ -143,6 +144,7 @@ class Order(models.Model):
     delivery_address = models.TextField("Адреса або відділення пошти")
     total = models.PositiveIntegerField("Сума, грн")
     status = models.CharField("Статус", max_length=12, choices=Status.choices, default=Status.PENDING)
+    admin_notification_sent = models.BooleanField("Сповіщення адміністратору надіслано", default=False)
     created_at = models.DateTimeField("Створено", auto_now_add=True)
 
     class Meta:
