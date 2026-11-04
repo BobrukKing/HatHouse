@@ -386,85 +386,6 @@ html body .delete-confirmation form input[type="submit"] {
   font-weight: 700;
 }
 
-.selector.selector ul.selector-chooser {
-  width: auto;
-  flex: 0 0 auto;
-  padding: 6px;
-}
-
-.selector-chooser .selector-add,
-.selector-chooser .selector-remove {
-  width: auto;
-  min-width: 88px;
-  height: auto;
-  padding: 7px 9px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--hh-action-bg);
-  color: #fff;
-  font-size: 0;
-  font-weight: 700;
-  line-height: 1.25;
-  opacity: 1;
-  text-indent: 0;
-  overflow: visible;
-  white-space: nowrap;
-}
-
-.selector-chooser .selector-add::after {
-  content: "Додати →";
-  font-size: 12px;
-}
-
-.selector-chooser .selector-remove::after {
-  content: "← Прибрати";
-  font-size: 12px;
-}
-
-.selector-chooser .selector-add:enabled:hover,
-.selector-chooser .selector-remove:enabled:hover {
-  background: var(--hh-action-hover);
-}
-
-.model-product .field-bonus_categories .help,
-.model-product #id_bonus_categories_from_title > .helptext,
-.model-product #id_bonus_categories_selector_chosen > .selector-chosen-title > .helptext {
-  display: none;
-}
-
-.model-product #id_bonus_categories_from_title,
-.model-product #id_bonus_categories_selector_chosen > .selector-chosen-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.model-product #id_bonus_categories_from_title label,
-.model-product #id_bonus_categories_selector_chosen > .selector-chosen-title label {
-  width: auto;
-  white-space: nowrap;
-}
-
-.model-product #id_bonus_categories_selector_chosen > .selector-chosen-title {
-  background: var(--darkened-bg);
-  color: var(--body-quiet-color);
-}
-
-.model-product #id_bonus_categories_selector_chosen > .selector-chosen-title label {
-  color: var(--body-quiet-color);
-}
-
-.model-product #id_bonus_categories_to {
-  border-color: var(--border-color);
-  background: var(--body-bg);
-  color: var(--body-fg);
-}
-
-.model-product #id_bonus_categories_selector_chosen {
-  border-radius: 8px;
-  background: var(--darkened-bg);
-}
-
 #recent-actions-module .actionlist li {
   margin: 8px 0;
   padding: 10px 12px;
@@ -544,18 +465,35 @@ form p.help {
     white-space: nowrap;
   }
 
-  .selector-chooser .selector-add,
-  .selector-chooser .selector-remove {
-    min-width: 88px;
-    font-size: 0.75rem;
-    text-indent: 0;
-    overflow: visible;
+  .model-product .field-bonus_categories .bonus-category-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .selector-chooser .selector-add::after,
-  .selector-chooser .selector-remove::after {
-    display: inline;
-    font-size: inherit;
+  .model-product .field-bonus_categories .bonus-category-list > div {
+    min-width: 0;
+  }
+
+  .model-product .field-bonus_categories .bonus-category-list label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid var(--hh-line);
+    border-radius: 8px;
+    background: var(--hh-surface);
+    color: var(--hh-ink);
+    cursor: pointer;
+  }
+
+  .model-product .field-bonus_categories .bonus-category-list input[type="checkbox"] {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--hh-accent);
   }
 
   #nav-sidebar {
@@ -577,5 +515,11 @@ form p.help {
   .module th,
   .module td {
     padding: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .model-product .field-bonus_categories .bonus-category-list {
+    grid-template-columns: 1fr;
   }
 }

@@ -61,7 +61,12 @@ class ProductAdminForm(forms.ModelForm):
         self.fields["description"].widget.attrs["rows"] = 10
         self.fields["description"].help_text = "Зберігайте абзаци, списки й відступи звичайним текстом."
         self.fields["category"].queryset = Category.objects.filter(is_bonus=False)
-        self.fields["bonus_categories"].queryset = Category.objects.filter(is_bonus=True)
+        bonus_categories = self.fields["bonus_categories"]
+        bonus_categories.widget = forms.CheckboxSelectMultiple(
+            attrs={"class": "bonus-category-list"}
+        )
+        bonus_categories.queryset = Category.objects.filter(is_bonus=True)
+        bonus_categories.help_text = "Позначте потрібні бонусні категорії."
 
     def clean(self):
         cleaned_data = super().clean()
@@ -146,7 +151,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "category", "price", "old_price", "available", "sort_order")
     list_filter = (MainCategoryFilter, BonusCategoryFilter, "available")
     search_fields = ("name", "description")
-    filter_horizontal = ("bonus_categories",)
     inlines = (ProductPhotoInline,)
 
     def save_related(self, request, form, formsets, change):

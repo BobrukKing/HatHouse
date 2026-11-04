@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.forms import CheckboxSelectMultiple
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.datastructures import MultiValueDict
@@ -347,6 +348,15 @@ class StorePagesTests(TestCase):
         self.assertNotIn(bonus_category, product_form.fields["category"].queryset)
         self.assertIn(bonus_category, product_form.fields["bonus_categories"].queryset)
         self.assertNotIn(main_category, product_form.fields["bonus_categories"].queryset)
+        self.assertIsInstance(
+            product_form.fields["bonus_categories"].widget,
+            CheckboxSelectMultiple,
+        )
+        bonus_categories_widget = str(product_form["bonus_categories"])
+        self.assertIn('type="checkbox"', bonus_categories_widget)
+        self.assertIn("checked", bonus_categories_widget)
+        self.assertIn(bonus_category.name, bonus_categories_widget)
+        self.assertNotIn(main_category.name, bonus_categories_widget)
 
         bonus_category.is_bonus = False
         CategoryAdmin(Category, admin.site).save_model(None, bonus_category, None, change=True)
