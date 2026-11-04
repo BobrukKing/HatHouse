@@ -1,5 +1,4 @@
 {% extends "admin/base.html" %}
-<<<<<<< HEAD
 {% load static %}
 
 {% block title %}{{ title }} | HatHouse{% endblock %}
@@ -7,6 +6,7 @@
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'admin/css/hathouse-admin.css' %}" />
+  <link rel="stylesheet" href="{% static 'shop/admin-mobile.css' %}" />
 {% endblock %}
 
 {% block branding %}
@@ -45,24 +45,3 @@
     {% endif %}
   </nav>
 {% endblock %}
-=======
-{% load i18n static %}
-
-{% block title %}{{ title }} | {{ site_title|default:_("Django site admin") }}{% endblock %}
-
-{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'shop/admin-mobile.css' %}" />
-{% endblock %}
-
-{% block branding %}
-  <div id="site-name">
-    <a href="{% url 'admin:index' %}">{{ site_header|default:_("Django administration") }}</a>
-  </div>
-  {% if user.is_anonymous %}
-    {% include "admin/color_theme_toggle.html" %}
-  {% endif %}
-{% endblock %}
-
-{% block nav-global %}{% endblock %}
->>>>>>> f3b13ec (optimized on phone)
