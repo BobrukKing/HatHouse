@@ -169,6 +169,9 @@ class StorePagesTests(TestCase):
         self.assertContains(response, "Швидка навігація")
         self.assertContains(response, "admin-nav-icon")
         self.assertContains(response, reverse("admin:shop_order_changelist"))
+        for label in ("Вітрина", "Замовлення", "Товари", "Категорії", "Налаштування"):
+            with self.subTest(label=label):
+                self.assertContains(response, f"<span>{label}</span>")
         self.assertContains(response, "admin/css/hathouse-admin.css")
 
     def test_catalog_shows_seeded_products_and_categories(self):

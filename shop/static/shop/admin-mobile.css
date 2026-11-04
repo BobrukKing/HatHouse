@@ -13,8 +13,32 @@
     margin: 0;
   }
 
+  #branding {
+    order: 1;
+    align-self: stretch;
+  }
+
   #user-tools {
+    order: 2;
+    align-self: stretch;
+    width: 100%;
     text-align: left;
+  }
+
+  .admin-quick-nav {
+    order: 3;
+    align-self: stretch;
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-quick-nav a {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
   }
 
   #nav-sidebar {
@@ -123,6 +147,17 @@
   #content input[type="submit"],
   #content button {
     min-height: 44px;
+  }
+
+  #content .object-tools a:link,
+  #content .object-tools a:visited {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    font-size: 0.8rem;
+    text-indent: 0;
+    text-transform: none;
+    white-space: nowrap;
   }
 
   #content .submit-row {

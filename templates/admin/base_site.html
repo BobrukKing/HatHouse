@@ -17,30 +17,30 @@
   <nav class="admin-quick-nav" aria-label="Швидка навігація">
     <a href="/">
       <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" /></svg>
-      Вітрина
+      <span>Вітрина</span>
     </a>
     {% if perms.shop.view_order %}
       <a href="{% url 'admin:shop_order_changelist' %}">
         <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" /></svg>
-        Замовлення
+        <span>Замовлення</span>
       </a>
     {% endif %}
     {% if perms.shop.view_product %}
       <a href="{% url 'admin:shop_product_changelist' %}">
         <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5zM3 8v9l9 5 9-5V8M12 13v9" /></svg>
-        Товари
+        <span>Товари</span>
       </a>
     {% endif %}
     {% if perms.shop.view_category %}
       <a href="{% url 'admin:shop_category_changelist' %}">
         <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="8" rx="1" /><rect x="3" y="13" width="8" height="8" rx="1" /><rect x="13" y="13" width="8" height="8" rx="1" /></svg>
-        Категорії
+        <span>Категорії</span>
       </a>
     {% endif %}
     {% if perms.shop.view_storesettings %}
       <a href="{% url 'admin:shop_storesettings_changelist' %}">
         <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.5.9l-.2 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.2 1.8a8 8 0 0 1 1.5.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7z" transform="translate(-1 -1)" /></svg>
-        Налаштування
+        <span>Налаштування</span>
       </a>
     {% endif %}
   </nav>
