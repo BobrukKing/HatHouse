@@ -256,6 +256,25 @@ class StorePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "adminsortable2/css/sortable.")
 
+    def test_admin_mobile_styles_load_on_login_dashboard_and_changelist(self):
+        response = self.client.get(reverse("admin:login"))
+        self.assertContains(response, "shop/admin-mobile.")
+
+        admin_user = User.objects.create_superuser(
+            username="mobile-admin",
+            email="mobile-admin@example.com",
+            password="test-password",
+        )
+        self.client.force_login(admin_user)
+
+        for url in (
+            reverse("admin:index"),
+            reverse("admin:shop_category_changelist"),
+        ):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, "shop/admin-mobile.")
+
     def test_bonus_category_is_in_header_and_includes_bonus_products(self):
         main_category = Category.objects.create(name="Main hats")
         bonus_category = Category.objects.create(name="Sale edit", is_bonus=True)

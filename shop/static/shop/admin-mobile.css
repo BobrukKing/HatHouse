@@ -1,0 +1,133 @@
+@media (max-width: 767px) {
+  #header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem;
+  }
+
+  #branding,
+  #user-tools {
+    float: none;
+    margin: 0;
+  }
+
+  #user-tools {
+    text-align: left;
+  }
+
+  #nav-sidebar {
+    max-width: 82vw;
+  }
+
+  .breadcrumbs {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  #content {
+    padding: 1rem 0.75rem;
+  }
+
+  #content h1 {
+    font-size: 1.4rem;
+  }
+
+  #content-main,
+  #content-related {
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+
+  #content-related {
+    margin-top: 1.25rem;
+  }
+
+  #changelist {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #changelist-filter {
+    position: static;
+    order: -1;
+    float: none;
+    width: 100%;
+    margin: 0 0 1rem;
+  }
+
+  #changelist-form .results,
+  .inline-group .tabular {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #changelist-form .results table,
+  .inline-group .tabular table {
+    min-width: 600px;
+  }
+
+  #changelist .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #changelist .actions select {
+    max-width: 100%;
+  }
+
+  #content form .aligned .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  #content form .aligned .form-row label {
+    float: none;
+    width: auto;
+    padding: 0;
+    text-align: left;
+  }
+
+  #content form .aligned .form-row input:not([type="checkbox"]):not([type="radio"]),
+  #content form .aligned .form-row select,
+  #content form .aligned .form-row textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+  }
+
+  #content form .aligned .form-row textarea {
+    min-height: 120px;
+  }
+
+  #content .object-tools {
+    float: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+  }
+
+  #content .object-tools li {
+    margin: 0;
+  }
+
+  #content .object-tools a,
+  #content .submit-row input,
+  #content .submit-row a,
+  #content input[type="submit"],
+  #content button {
+    min-height: 44px;
+  }
+
+  #content .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
