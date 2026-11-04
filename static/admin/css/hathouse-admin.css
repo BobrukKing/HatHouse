@@ -535,6 +535,29 @@ form p.help {
     padding: 8px 10px;
   }
 
+  #content .object-tools a:link,
+  #content .object-tools a:visited {
+    color: #fff;
+    font-size: 0.8rem;
+    text-indent: 0;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .selector-chooser .selector-add,
+  .selector-chooser .selector-remove {
+    min-width: 88px;
+    font-size: 0.75rem;
+    text-indent: 0;
+    overflow: visible;
+  }
+
+  .selector-chooser .selector-add::after,
+  .selector-chooser .selector-remove::after {
+    display: inline;
+    font-size: inherit;
+  }
+
   #nav-sidebar {
     top: 0;
   }

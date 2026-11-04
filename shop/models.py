@@ -100,6 +100,7 @@ class ProductPhoto(models.Model):
 
 
 class StoreSettings(models.Model):
+    singleton_key = models.CharField(max_length=32, default="store-settings", unique=True, editable=False)
     brand_name = models.CharField("Назва магазину", max_length=40, default="HatHouse")
     brand_image = models.ImageField("Аватарка", upload_to="branding/", blank=True)
     season_text = models.CharField("Текст сезону", max_length=80, default="Осінь / Зима 2026")
@@ -110,6 +111,15 @@ class StoreSettings(models.Model):
 
     def __str__(self):
         return self.brand_name
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            existing_pk = type(self).objects.values_list("pk", flat=True).first()
+            if existing_pk is not None:
+                self.pk = existing_pk
+                kwargs.pop("force_insert", None)
+                kwargs["force_update"] = True
+        super().save(*args, **kwargs)
 
 
 class StorePage(models.Model):

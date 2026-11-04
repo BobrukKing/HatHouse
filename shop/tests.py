@@ -174,6 +174,50 @@ class StorePagesTests(TestCase):
                 self.assertContains(response, f"<span>{label}</span>")
         self.assertContains(response, "admin/css/hathouse-admin.css")
 
+    def test_store_settings_admin_updates_the_single_existing_record(self):
+        admin_user = User.objects.create_superuser(
+            username="store-settings-admin",
+            email="store-settings@example.com",
+            password="test-password",
+        )
+        self.client.force_login(admin_user)
+
+        settings = StoreSettings.objects.order_by("-pk").first()
+        changelist_url = reverse("admin:shop_storesettings_changelist")
+        change_url = reverse("admin:shop_storesettings_change", args=(settings.pk,))
+
+        response = self.client.get(changelist_url)
+        self.assertRedirects(response, change_url)
+        self.assertRedirects(
+            self.client.get(reverse("admin:shop_storesettings_add")),
+            change_url,
+        )
+
+        response = self.client.post(change_url, {
+            "brand_name": "Updated HatHouse",
+            "season_text": "Весна / Літо 2027",
+            "_save": "Зберегти",
+        })
+
+        self.assertEqual(response.status_code, 302)
+        settings.refresh_from_db()
+        self.assertEqual(settings.brand_name, "Updated HatHouse")
+        self.assertEqual(settings.season_text, "Весна / Літо 2027")
+        self.assertEqual(StoreSettings.objects.count(), 1)
+
+    def test_creating_store_settings_updates_the_existing_singleton(self):
+        existing = StoreSettings.objects.order_by("-pk").first()
+
+        created = StoreSettings.objects.create(
+            brand_name="Updated via create",
+            season_text="Зима / Весна 2027",
+        )
+
+        self.assertEqual(created.pk, existing.pk)
+        self.assertEqual(StoreSettings.objects.count(), 1)
+        existing.refresh_from_db()
+        self.assertEqual(existing.brand_name, "Updated via create")
+
     def test_catalog_shows_seeded_products_and_categories(self):
         response = self.client.get(reverse("catalog"))
         self.assertEqual(response.status_code, 200)

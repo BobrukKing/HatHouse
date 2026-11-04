@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.models import Max
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from adminsortable2.admin import SortableAdminMixin
 
 from .models import (
@@ -174,6 +176,25 @@ class StorePageAdmin(admin.ModelAdmin):
 @admin.register(StoreSettings)
 class StoreSettingsAdmin(admin.ModelAdmin):
     list_display = ("brand_name", "season_text")
+
+    def has_add_permission(self, request):
+        return super().has_add_permission(request) and not StoreSettings.objects.exists()
+
+    def add_view(self, request, form_url="", extra_context=None):
+        existing = StoreSettings.objects.order_by("-pk").first()
+        if existing is not None:
+            return HttpResponseRedirect(
+                reverse("admin:shop_storesettings_change", args=(existing.pk,))
+            )
+        return super().add_view(request, form_url, extra_context)
+
+    def changelist_view(self, request, extra_context=None):
+        existing = StoreSettings.objects.order_by("-pk").first()
+        if existing is not None:
+            return HttpResponseRedirect(
+                reverse("admin:shop_storesettings_change", args=(existing.pk,))
+            )
+        return super().changelist_view(request, extra_context)
 
     def has_delete_permission(self, request, obj=None):
         return False
